@@ -1,0 +1,31 @@
+###
+
+# curl http://localhost:8080/users -v -X POST -H "Content-Type: application/json" -d "{\"name\":\"name01\", \"age\":\"20\"}"
+POST http://localhost:8080/users
+Content-Type: application/json
+
+{
+  "name": "name01",
+  "age": "20"
+}
+
+###
+
+# curl http://localhost:8080/users/3 -v -X PUT -H "Content-Type: application/json" -d "{\"name\":\"name02_\", \"age\":\"40\"}"
+PUT http://localhost:8080/users/3
+Content-Type: application/json
+
+{
+  "name": "name02_",
+  "age": "40"
+}
+
+###
+
+# curl http://localhost:8080/users/4 -v -X DELETE
+DELETE http://localhost:8080/users/4
+
+###
+
+
+
