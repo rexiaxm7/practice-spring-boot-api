@@ -2,7 +2,6 @@ package com.example.demo.rest.service;
 
 import com.example.demo.rest.bean.User;
 import com.example.demo.rest.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
@@ -11,11 +10,10 @@ import java.util.Optional;
 
 @Service
 @Transactional
-public class RestUserService {
+public class UserService {
     private final UserRepository userRepository;
 
-    @Autowired
-    public RestUserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
 

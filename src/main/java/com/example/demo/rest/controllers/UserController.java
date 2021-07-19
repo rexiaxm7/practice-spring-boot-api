@@ -1,9 +1,7 @@
 package com.example.demo.rest.controllers;
 
 import com.example.demo.rest.bean.User;
-import com.example.demo.rest.repository.UserRepository;
-import com.example.demo.rest.service.RestUserService;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.example.demo.rest.service.UserService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -11,38 +9,37 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("users")
-public class RestUserController {
+public class UserController {
 
-    private final RestUserService restUserService;
+    private final UserService userService;
 
-    @Autowired
-    public RestUserController(RestUserService restUserService) {
-        this.restUserService = restUserService;
+    public UserController(UserService userService) {
+        this.userService = userService;
     }
 
     @RequestMapping(method = RequestMethod.GET)
     public List<User> userListGet() {
-        return restUserService.findAll();
+        return userService.findAll();
     }
 
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)
     public Optional<User> userGet(@PathVariable("id") int id) {
-        return restUserService.findOne(id);
+        return userService.findOne(id);
     }
 
     @RequestMapping(method = RequestMethod.POST)
     public User userCreate(@RequestBody User user) {
-        return restUserService.create(user);
+        return userService.create(user);
     }
 
     @RequestMapping(value = "/{id}", method = RequestMethod.PUT)
     public User userUpdate(@PathVariable("id") int id,@RequestBody User user) {
         user.setId(id);
-        return restUserService.update(user);
+        return userService.update(user);
     }
 
     @RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
     public void userDelete(@PathVariable("id") int id) {
-       restUserService.delete(id);
+       userService.delete(id);
     }
 }
