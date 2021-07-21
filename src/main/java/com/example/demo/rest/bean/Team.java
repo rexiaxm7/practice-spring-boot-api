@@ -2,6 +2,7 @@ package com.example.demo.rest.bean;
 
 import lombok.Data;
 import javax.persistence.*;
+import javax.validation.constraints.NotBlank;
 
 @Data
 @Entity
@@ -13,5 +14,6 @@ public class Team {
     private int id;
 
     @Column(name="name")
+    @NotBlank(message = "チーム名を入力してください")
     private String name;
 }
