@@ -1,0 +1,14 @@
+###
+
+# curl http://localhost:8080/reports -v -X POST -H "Content-Type: application/json" -d "{\"user_id\":\"4\", \"month\":\"10\", \"content\":\"あいうえお\"}"
+POST http://localhost:8080/reports
+Content-Type: application/json
+
+{
+  "user_id": "4",
+  "month": "10",
+  "content": "あいうえお"
+}
+
+###
+

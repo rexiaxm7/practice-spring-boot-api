@@ -1,8 +1,10 @@
-package com.example.demo.rest.bean;
+package com.example.demo.bean;
 
 import lombok.Data;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 
 @Data
 @Entity
@@ -15,9 +17,11 @@ public class User {
     private int id;
     
     @Column(name="name")
+    @NotBlank(message = "{NotBlank.User.name}")
     private String name;
 
-    @Column(name="age")
-    private int age;
+    @Column(name= "team_id")
+    @NotNull(message = "{NotNull.User.team_id}")
+    private int team_id;
 
 }

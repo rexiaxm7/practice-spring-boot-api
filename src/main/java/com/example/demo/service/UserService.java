@@ -1,7 +1,7 @@
-package com.example.demo.rest.service;
+package com.example.demo.service;
 
-import com.example.demo.rest.bean.User;
-import com.example.demo.rest.repository.UserRepository;
+import com.example.demo.bean.User;
+import com.example.demo.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;

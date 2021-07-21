@@ -1,6 +1,6 @@
-package com.example.demo.rest.repository;
+package com.example.demo.repository;
 
-import com.example.demo.rest.bean.User;
+import com.example.demo.bean.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface UserRepository extends JpaRepository<User, Integer> {
