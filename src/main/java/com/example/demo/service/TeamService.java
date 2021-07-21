@@ -1,6 +1,6 @@
-package com.example.demo.rest.service;
-import com.example.demo.rest.bean.Team;
-import com.example.demo.rest.repository.TeamRepository;
+package com.example.demo.service;
+import com.example.demo.bean.Team;
+import com.example.demo.repository.TeamRepository;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;

@@ -1,7 +1,7 @@
-package com.example.demo.rest.controllers;
+package com.example.demo.controllers;
 
-import com.example.demo.rest.bean.Team;
-import com.example.demo.rest.service.TeamService;
+import com.example.demo.bean.Team;
+import com.example.demo.service.TeamService;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Optional;

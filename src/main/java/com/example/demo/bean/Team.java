@@ -1,4 +1,4 @@
-package com.example.demo.rest.bean;
+package com.example.demo.bean;
 
 import lombok.Data;
 import javax.persistence.*;
@@ -14,6 +14,6 @@ public class Team {
     private int id;
 
     @Column(name="name")
-    @NotBlank(message = "チーム名を入力してください")
+    @NotBlank(message = "{NotBlank.Team.name}")
     private String name;
 }

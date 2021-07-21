@@ -1,4 +1,4 @@
-package com.example.demo.rest.bean;
+package com.example.demo.bean;
 
 import lombok.Data;
 
@@ -19,16 +19,17 @@ public class Report {
     private int id;
 
     @Column(name="user_id")
-    @NotNull(message = "ユーザーIDを入力してください")
+    @NotNull(message = "{NotNull.Report.user_id}")
     private int user_id;
 
     @Column(name="month")
     @Min(1)
     @Max(12)
-    @NotNull(message = "月を入力してください")
+    @NotNull(message = "{NotNull.Report.month}")
     private int month;
 
     @Column(name = "content")
-    @NotBlank(message = "内容を入力してください")
+    @NotBlank(message = "{NotBlank.Report.content}")
     private String content;
+
 }

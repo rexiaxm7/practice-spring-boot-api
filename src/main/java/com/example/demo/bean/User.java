@@ -1,4 +1,4 @@
-package com.example.demo.rest.bean;
+package com.example.demo.bean;
 
 import lombok.Data;
 
@@ -17,11 +17,11 @@ public class User {
     private int id;
     
     @Column(name="name")
-    @NotBlank(message = "名前を入力してください")
+    @NotBlank(message = "{NotBlank.User.name}")
     private String name;
 
     @Column(name= "team_id")
-    @NotNull(message = "年齢を入力してください")
+    @NotNull(message = "{NotNull.User.team_id}")
     private int team_id;
 
 }

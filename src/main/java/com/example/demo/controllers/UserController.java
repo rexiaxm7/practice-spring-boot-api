@@ -1,7 +1,7 @@
-package com.example.demo.rest.controllers;
+package com.example.demo.controllers;
 
-import com.example.demo.rest.bean.User;
-import com.example.demo.rest.service.UserService;
+import com.example.demo.bean.User;
+import com.example.demo.service.UserService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;

@@ -1,6 +1,6 @@
-package com.example.demo.rest.repository;
+package com.example.demo.repository;
 
-import com.example.demo.rest.bean.Report;
+import com.example.demo.bean.Report;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ReportRepository extends JpaRepository<Report, Integer> {

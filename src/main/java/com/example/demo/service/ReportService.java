@@ -1,7 +1,7 @@
-package com.example.demo.rest.service;
+package com.example.demo.service;
 
-import com.example.demo.rest.bean.Report;
-import com.example.demo.rest.repository.ReportRepository;
+import com.example.demo.bean.Report;
+import com.example.demo.repository.ReportRepository;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;

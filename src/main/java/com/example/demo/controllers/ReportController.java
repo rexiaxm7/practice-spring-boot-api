@@ -1,7 +1,7 @@
-package com.example.demo.rest.controllers;
+package com.example.demo.controllers;
 
-import com.example.demo.rest.bean.Report;
-import com.example.demo.rest.service.ReportService;
+import com.example.demo.bean.Report;
+import com.example.demo.service.ReportService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
