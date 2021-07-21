@@ -1,6 +1,13 @@
-CREATE TABLE public.user
+create table "user"
 (
-    id serial NOT NULL,
-    name character varying(20) COLLATE pg_catalog."default" NOT NULL,
-    age integer NOT NULL
-)
+    id serial not null
+        constraint user_pk
+            primary key,
+    name varchar(20) not null,
+    team_id integer not null
+        constraint user_team__fk
+            references team
+);
+
+alter table "user" owner to test;
+
