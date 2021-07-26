@@ -1,14 +1,14 @@
-###
+##
 
-## curl http://localhost:8080/team -v -X POST -H "Content-Type: application/json" -d "{\"name\":\"nakagawa\"}"
-#POST http://localhost:8080/team
-#Content-Type: application/json
-#
-#{
-#  "name": "nakagawa"
-#}
-#
-####
+# curl http://localhost:8080/teams -v -X POST -H "Content-Type: application/json" -d "{\"name\":\"nakagawa\"}"
+POST http://localhost:8080/teams
+Content-Type: application/json
+
+{
+  "name": "nakagawa"
+}
+
+###
 
 ## curl http://localhost:8080/team/2 -v -X PUT -H "Content-Type: application/json" -d "{\"name\":\"name01_\"}"
 #PUT http://localhost:8080/team/2
@@ -20,10 +20,10 @@
 
 ###
 
-# curl http://localhost:8080/team/3 -v -X DELETE
-DELETE http://localhost:8080/team/3
-
-###
+## curl http://localhost:8080/team/3 -v -X DELETE
+#DELETE http://localhost:8080/team/3
+#
+####
 
 
 
