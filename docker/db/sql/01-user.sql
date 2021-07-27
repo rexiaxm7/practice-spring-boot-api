@@ -10,4 +10,3 @@ create table "user"
 );
 
 alter table "user" owner to test;
-

@@ -11,4 +11,3 @@ create table report
 );
 
 alter table report owner to test;
-

@@ -10,4 +10,3 @@ create table team
 
 alter table team
     owner to test;
-

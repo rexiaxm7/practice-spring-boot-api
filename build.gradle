@@ -29,6 +29,17 @@ dependencies {
 	providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
+	implementation 'org.springframework.boot:spring-boot-starter-batch'
+	runtimeOnly 'org.hsqldb:hsqldb'
+	implementation 'org.springframework.boot:spring-boot-starter-log4j2'
+
+}
+
+configurations.all {
+
+	exclude group: 'ch.qos.logback', module: 'logback-classic' // = SLF4J > Log4J 1.x. (SLF4J Side)
+	exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
+
 }
 
 test {
