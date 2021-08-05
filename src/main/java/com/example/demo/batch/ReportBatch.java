@@ -34,7 +34,7 @@ public class ReportBatch {
         this.reportRepository = reportRepository;
     }
 
-    public final String TEAMS_INCOMING_WEBHOOK = "https://crosswarecojp.webhook.office.com/webhookb2/32c19281-4ec8-4fe6-880c-c6ea30b5b92f@9e83d70e-f874-41b1-92b6-6111a5654bb0/IncomingWebhook/e67e2c391d4e471ba523f64bee1dce24/6de1ecb3-93c5-456b-b15e-72fa41e722e7";
+    public final String TEAMS_INCOMING_WEBHOOK = System.getenv("TEAMS_INCOMING_WEBHOOK");
 
     /**
      * Webhook データ構造
