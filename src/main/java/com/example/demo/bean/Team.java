@@ -25,4 +25,8 @@ public class Team {
     @Column(name="alert_start_days")
     @NotNull(message = "{NotNull.Team.alert_start_days}")
     private int alert_start_days;
+
+    @Column(name="sending_message_url")
+    @NotNull(message = "{NotNull.Team.alert_start_days}")
+    private String sending_message_url;
 }
