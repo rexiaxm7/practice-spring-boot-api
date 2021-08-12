@@ -1,13 +1,15 @@
 create table report
 (
-    id serial not null
+    id      serial               not null
         constraint report_pk
             primary key,
-    user_id integer not null
+    user_id integer              not null
         constraint report_user__fk
-            references "user",
-    month integer,
+            references user,
+    year    integer default 2021 not null,
+    month   integer,
     content varchar
 );
 
-alter table report owner to test;
+alter table report
+    owner to test;
