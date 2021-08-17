@@ -3,6 +3,7 @@ package com.example.demo.batch;
 import com.example.demo.bean.Report;
 import com.example.demo.bean.Submission;
 import com.example.demo.bean.Team;
+import com.example.demo.bean.User;
 import com.example.demo.repository.ReportRepository;
 import com.example.demo.repository.SubmissionRepository;
 import com.example.demo.repository.TeamRepository;
@@ -10,48 +11,38 @@ import com.example.demo.repository.UserRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.http.MediaType;
 import org.springframework.http.RequestEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
-import java.io.FileOutputStream;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Optional;
 
 @Component
 public class ReportBatch {
-    public final String TEAMS_INCOMING_WEBHOOK = System.getenv("TEAMS_INCOMING_WEBHOOK");
     private final TeamRepository teamRepository;
     private final UserRepository userRepository;
     private final ReportRepository reportRepository;
     private final SubmissionRepository submissionRepository;
+    private Optional<User> user;
 
-    public ReportBatch(TeamRepository teamRepository, UserRepository userRepository, ReportRepository reportRepository, SubmissionRepository submissionRepository) {
+    public ReportBatch(TeamRepository teamRepository, UserRepository userRepository, ReportRepository reportRepository, SubmissionRepository submissionRepository, Optional<User> user) {
         this.teamRepository = teamRepository;
         this.userRepository = userRepository;
         this.reportRepository = reportRepository;
         this.submissionRepository = submissionRepository;
+        this.user = user;
     }
 
-    /**
-     * Webhook データ構造
-     */
-    @JsonSerialize
-    private class Message {
-        public String title;
-        public String text;
-    }
-
-    @Scheduled(cron = "0 * * * * *", zone = "Asia/Tokyo")
+    @Scheduled(cron = "${BATCH_CRON}", zone = "${BATCH_TIMEZONE}")
     public void batchMain() throws IOException {
         sendInputMessages();
         sendWarningMessages();
@@ -61,6 +52,7 @@ public class ReportBatch {
 
     /**
      * 入力開始日にメッセージを送信する
+     *
      * @throws IOException
      */
     private void sendInputMessages() throws IOException {
@@ -134,7 +126,6 @@ public class ReportBatch {
     }
 
     /**
-     *
      * 通知開始日用のメッセージをセットしメッセージを送信するメソッドを呼び出す
      *
      * @param sending_message_url
@@ -142,7 +133,7 @@ public class ReportBatch {
      */
     private void sendWarningMessage(String sending_message_url) throws JsonProcessingException {
         ReportBatch.Message incoming = new ReportBatch.Message();
-        incoming.title = "通知開始日";
+        incoming.title = "警告";
         incoming.text = "月報が提出されていません";
 
         sendMessage(incoming, sending_message_url);
@@ -154,7 +145,7 @@ public class ReportBatch {
      * @param calendar
      * @param team
      * @return 通知開始日以降でチームメンバーの月報が全員分登録されていなかった場合にtrue
-     *         通知開始日前もしくはチームメンバーの月報が全員分登録されていた場合にfalse
+     * 通知開始日前もしくはチームメンバーの月報が全員分登録されていた場合にfalse
      */
     private boolean shouldSendWarningMessage(Calendar calendar, Team team) {
         int today = calendar.get(Calendar.DATE);
@@ -165,7 +156,7 @@ public class ReportBatch {
             return false;
         }
 
-        return userRepository.checkSubmission(thisYear,thisMonth, team.getId()).size() != 0;
+        return userRepository.checkSubmission(thisYear, thisMonth, team.getId()).size() != 0;
 
     }
 
@@ -189,29 +180,26 @@ public class ReportBatch {
                 continue;
             }
 
-            //全員分の月報が登録済みの場合、ファイル化
-            if (userRepository.checkSubmission(thisYear,thisMonth, team.getId()).size() == 0) {
-                List<Report> reports = reportRepository.findByTeamId(team.getId(), thisYear, thisMonth);
-                Workbook outputWorkbook = new XSSFWorkbook();
-                Sheet sheet = outputWorkbook.createSheet(thisMonth + "月");
+            if (userRepository.checkSubmission(thisYear, thisMonth, team.getId()).size() == 0) {
+                try {
+                    File file = new File("src/main/resources/file/" + team.getName() + thisYear + "年" + thisMonth + "月.md");
+                    BufferedWriter bw = new BufferedWriter(new FileWriter(file, true));
+                    List<Report> reports = reportRepository.findByTeamId(team.getId(), thisYear, thisMonth);
+                    for (int i = 0; i < reports.size(); i++) {
+                        user = userRepository.findById(reports.get(i).getUser_id());
+                        bw.write(user.get().getName() + " : ");
+                        bw.write(reports.get(i).getContent());
+                        bw.newLine();
+                    }
+                    bw.close();
 
-                Cell outputCell_content;
-                for (int i = 0; i < reports.size(); i++) {
-                    Row row = sheet.createRow(i);
-                    // 0番目のセルの値を取得
-                    outputCell_content = row.createCell(0);
-                    // セルに値を設定
-                    outputCell_content.setCellValue(reports.get(i).getContent());
+                    createFileMessage(team.getSending_message_url());
+                    saveSubmission(calendar, team);
+
+
+                } catch (IOException e) {
+                    System.out.println(e);
                 }
-
-                String fileName = "src/main/resources/file/" + team.getName() + thisYear + "年" + thisMonth + "月.xlsx";
-                // 出力用のストリームを用意
-                FileOutputStream out = new FileOutputStream(fileName);
-
-                // ファイルへ出力
-                outputWorkbook.write(out);
-                createFileMessage(team.getSending_message_url());
-                saveSubmission(calendar, team);
             }
         }
     }
@@ -260,27 +248,25 @@ public class ReportBatch {
 
             // 1日の場合
             if (today == 1) {
-                List<Report> reports = reportRepository.findByTeamId(team.getId(), thisYear, thisMonth);
-                Workbook outputWorkbook = new XSSFWorkbook();
-                Sheet sheet = outputWorkbook.createSheet(thisMonth + "月");
+                try {
+                    File file = new File("src/main/resources/file/" + team.getName() + thisYear + "年" + thisMonth + "月.md");
+                    BufferedWriter bw = new BufferedWriter(new FileWriter(file, true));
+                    List<Report> reports = reportRepository.findByTeamId(team.getId(), thisYear, thisMonth);
+                    for (int i = 0; i < reports.size(); i++) {
+                        user = userRepository.findById(reports.get(i).getUser_id());
+                        bw.write(user.get().getName() + " : ");
+                        bw.write(reports.get(i).getContent());
+                        bw.newLine();
+                    }
+                    bw.close();
 
-                Cell outputCell_content;
-                for (int i = 0; i < reports.size(); i++) {
-                    Row row = sheet.createRow(i);
-                    // 0番目のセルの値を取得
-                    outputCell_content = row.createCell(0);
-                    // セルに値を設定
-                    outputCell_content.setCellValue(reports.get(i).getContent());
+                    createFileMessage(team.getSending_message_url());
+                    saveSubmission(calendar, team);
+
+
+                } catch (IOException e) {
+                    System.out.println(e);
                 }
-
-                String fileName = "src/main/resources/file/" + team.getName() + thisYear + "年" + thisMonth + "月.xlsx";
-                // 出力用のストリームを用意
-                FileOutputStream out = new FileOutputStream(fileName);
-
-                // ファイルへ出力
-                outputWorkbook.write(out);
-                createFileMessage(team.getSending_message_url());
-                saveSubmission(calendar, team);
             }
         }
     }
@@ -334,6 +320,16 @@ public class ReportBatch {
         submission.setMonth(thisMonth);
 
         submissionRepository.save(submission);
+    }
+
+    /**
+     * Webhook データ構造
+     */
+    @JsonSerialize
+    private class Message {
+        public String title;
+        public String text;
+        public File file;
     }
 
 

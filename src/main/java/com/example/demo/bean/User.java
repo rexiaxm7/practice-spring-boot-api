@@ -1,6 +1,7 @@
 package com.example.demo.bean;
 
 import lombok.Data;
+import org.springframework.stereotype.Component;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
@@ -9,6 +10,7 @@ import javax.validation.constraints.NotNull;
 @Data
 @Entity
 @Table(name = "user",schema = "public")
+@Component
 public class User {
 
     @Id
