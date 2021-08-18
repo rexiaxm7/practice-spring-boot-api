@@ -11,6 +11,7 @@ import com.example.demo.repository.UserRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
 import org.springframework.http.MediaType;
 import org.springframework.http.RequestEntity;
@@ -35,6 +36,9 @@ public class ReportBatch {
     private final ReportRepository reportRepository;
     private final SubmissionRepository submissionRepository;
     private final MessageSource msg;
+
+    @Value("${file.name}")
+    private String fileName;
 
     public ReportBatch(TeamRepository teamRepository, UserRepository userRepository, ReportRepository reportRepository, SubmissionRepository submissionRepository, MessageSource msg) {
         this.teamRepository = teamRepository;
@@ -186,7 +190,7 @@ public class ReportBatch {
             if (userRepository.checkSubmission(thisYear, thisMonth, team.getId()).size() == 0) {
                 try {
 
-                    File file = new File("src/main/resources/file/" + msg.getMessage("file.name",new String[] { team.getName(),String.valueOf(thisYear),String.valueOf(thisMonth) }, Locale.JAPAN));
+                    File file = new File(getFileName( team.getName(),String.valueOf(thisYear),String.valueOf(thisMonth)));
                     BufferedWriter bw = new BufferedWriter(new FileWriter(file, true));
                     List<Report> reports = reportRepository.findByTeamId(team.getId(), thisYear, thisMonth);
                     for (int i = 0; i < reports.size(); i++) {
@@ -253,7 +257,7 @@ public class ReportBatch {
             // 1日の場合
             if (today == 1) {
                 try {
-                    File file = new File("src/main/resources/file/" + msg.getMessage("file.name",new String[] { team.getName(),String.valueOf(thisYear),String.valueOf(thisMonth) }, Locale.JAPAN));
+                    File file = new File(getFileName( team.getName(),String.valueOf(thisYear),String.valueOf(thisMonth)));
                     BufferedWriter bw = new BufferedWriter(new FileWriter(file, true));
                     List<Report> reports = reportRepository.findByTeamId(team.getId(), thisYear, thisMonth);
                     for (int i = 0; i < reports.size(); i++) {
@@ -324,6 +328,12 @@ public class ReportBatch {
         submission.setMonth(thisMonth);
 
         submissionRepository.save(submission);
+    }
+
+    public String getFileName(String teamName, String thisYear, String thisMonth){
+        return "src/main/resources/file/" + fileName.replace("{team_name}",teamName)
+                .replace("{yyyy}",thisYear)
+                .replace("{mm}",thisMonth);
     }
 
     /**
