@@ -11,6 +11,7 @@ import com.example.demo.repository.UserRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import org.springframework.context.MessageSource;
 import org.springframework.http.MediaType;
 import org.springframework.http.RequestEntity;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -24,6 +25,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 @Component
@@ -32,17 +34,18 @@ public class ReportBatch {
     private final UserRepository userRepository;
     private final ReportRepository reportRepository;
     private final SubmissionRepository submissionRepository;
-    private Optional<User> user;
+    private final MessageSource msg;
 
-    public ReportBatch(TeamRepository teamRepository, UserRepository userRepository, ReportRepository reportRepository, SubmissionRepository submissionRepository, Optional<User> user) {
+    public ReportBatch(TeamRepository teamRepository, UserRepository userRepository, ReportRepository reportRepository, SubmissionRepository submissionRepository, MessageSource msg) {
         this.teamRepository = teamRepository;
         this.userRepository = userRepository;
         this.reportRepository = reportRepository;
         this.submissionRepository = submissionRepository;
-        this.user = user;
+        this.msg = msg;
+
     }
 
-    @Scheduled(cron = "${BATCH_CRON}", zone = "${BATCH_TIMEZONE}")
+    @Scheduled(cron = "${batch.cron}", zone = "${batch.timezone}")
     public void batchMain() throws IOException {
         sendInputMessages();
         sendWarningMessages();
@@ -81,8 +84,8 @@ public class ReportBatch {
      */
     private void sendInputMessage(String sending_message_url) throws JsonProcessingException {
         ReportBatch.Message incoming = new ReportBatch.Message();
-        incoming.title = "入力開始日";
-        incoming.text = "月報を提出してください。";
+        incoming.title = msg.getMessage("incoming.title.input",null, Locale.JAPAN);
+        incoming.text = msg.getMessage("incoming.text.input",null, Locale.JAPAN);
 
         sendMessage(incoming, sending_message_url);
     }
@@ -133,8 +136,8 @@ public class ReportBatch {
      */
     private void sendWarningMessage(String sending_message_url) throws JsonProcessingException {
         ReportBatch.Message incoming = new ReportBatch.Message();
-        incoming.title = "警告";
-        incoming.text = "月報が提出されていません";
+        incoming.title = msg.getMessage("incoming.title.alert",null, Locale.JAPAN);
+        incoming.text = msg.getMessage("incoming.text.alert",null, Locale.JAPAN);
 
         sendMessage(incoming, sending_message_url);
     }
@@ -182,11 +185,12 @@ public class ReportBatch {
 
             if (userRepository.checkSubmission(thisYear, thisMonth, team.getId()).size() == 0) {
                 try {
-                    File file = new File("src/main/resources/file/" + team.getName() + thisYear + "年" + thisMonth + "月.md");
+
+                    File file = new File("src/main/resources/file/" + msg.getMessage("file.name",new String[] { team.getName(),String.valueOf(thisYear),String.valueOf(thisMonth) }, Locale.JAPAN));
                     BufferedWriter bw = new BufferedWriter(new FileWriter(file, true));
                     List<Report> reports = reportRepository.findByTeamId(team.getId(), thisYear, thisMonth);
                     for (int i = 0; i < reports.size(); i++) {
-                        user = userRepository.findById(reports.get(i).getUser_id());
+                        Optional<User> user = userRepository.findById(reports.get(i).getUser_id());
                         bw.write(user.get().getName() + " : ");
                         bw.write(reports.get(i).getContent());
                         bw.newLine();
@@ -212,8 +216,8 @@ public class ReportBatch {
      */
     private void createFileMessage(String sending_message_url) throws JsonProcessingException {
         ReportBatch.Message incoming = new ReportBatch.Message();
-        incoming.title = "ファイル化完了";
-        incoming.text = "ファイルが作成されました";
+        incoming.title = msg.getMessage("incoming.title.done",null, Locale.JAPAN);
+        incoming.text = msg.getMessage("incoming.text.done",null, Locale.JAPAN);
 
         sendMessage(incoming, sending_message_url);
     }
@@ -249,11 +253,11 @@ public class ReportBatch {
             // 1日の場合
             if (today == 1) {
                 try {
-                    File file = new File("src/main/resources/file/" + team.getName() + thisYear + "年" + thisMonth + "月.md");
+                    File file = new File("src/main/resources/file/" + msg.getMessage("file.name",new String[] { team.getName(),String.valueOf(thisYear),String.valueOf(thisMonth) }, Locale.JAPAN));
                     BufferedWriter bw = new BufferedWriter(new FileWriter(file, true));
                     List<Report> reports = reportRepository.findByTeamId(team.getId(), thisYear, thisMonth);
                     for (int i = 0; i < reports.size(); i++) {
-                        user = userRepository.findById(reports.get(i).getUser_id());
+                        Optional<User> user = userRepository.findById(reports.get(i).getUser_id());
                         bw.write(user.get().getName() + " : ");
                         bw.write(reports.get(i).getContent());
                         bw.newLine();
