@@ -188,25 +188,10 @@ public class ReportBatch {
             }
 
             if (userRepository.checkSubmission(thisYear, thisMonth, team.getId()).size() == 0) {
-                try {
-                    File file = new File(getFileName( team.getName(),String.valueOf(thisYear),String.valueOf(thisMonth)));
-                    BufferedWriter bw = new BufferedWriter(new FileWriter(file, true));
-                    List<Report> reports = reportRepository.findByTeamId(team.getId(), thisYear, thisMonth);
-                    for (int i = 0; i < reports.size(); i++) {
-                        Optional<User> user = userRepository.findById(reports.get(i).getUser_id());
-                        bw.write(user.get().getName() + " : ");
-                        bw.write(reports.get(i).getContent());
-                        bw.newLine();
-                    }
-                    bw.close();
+                createFile(team, thisYear, thisMonth);
+                createFileMessage(team.getSending_message_url());
+                saveSubmission(thisYear, thisMonth, team);
 
-                    createFileMessage(team.getSending_message_url());
-                    saveSubmission(thisYear,thisMonth, team);
-
-
-                } catch (IOException e) {
-                    System.out.println(e);
-                }
             }
         }
     }
@@ -230,12 +215,12 @@ public class ReportBatch {
      *
      * @throws IOException
      */
-    private void createFilesTemporarily() throws IOException {
+    private void createFilesTemporarily() throws IOException  {
         // 前月を取得
-        LocalDate lastDate = LocalDate.now().minusMonths(1);
-        int thisYear = lastDate.getYear();
-        int thisMonth = lastDate.getMonthValue();
-        int today = lastDate.getDayOfMonth();
+        LocalDate targetDate = LocalDate.of(2021,8,1).minusMonths(1);
+        int targetYear = targetDate.getYear();
+        int targetMonth = targetDate.getMonthValue();
+        int targetDay = targetDate.getDayOfMonth();
 
         //Teamテーブルから全Teamの情報を取得する
         List<Team> teams = teamRepository.findAll();
@@ -244,31 +229,15 @@ public class ReportBatch {
         for (Team team : teams) {
 
             // 既にファイル化されていた場合、continue
-            if (!checkSubmission(thisYear, thisMonth, team)) {
+            if (!checkSubmission(targetYear, targetMonth, team)) {
                 continue;
             }
 
             // 1日の場合
-            if (today == 1) {
-                try {
-                    File file = new File(getFileName( team.getName(),String.valueOf(thisYear),String.valueOf(thisMonth)));
-                    BufferedWriter bw = new BufferedWriter(new FileWriter(file, true));
-                    List<Report> reports = reportRepository.findByTeamId(team.getId(), thisYear, thisMonth);
-                    for (int i = 0; i < reports.size(); i++) {
-                        Optional<User> user = userRepository.findById(reports.get(i).getUser_id());
-                        bw.write(user.get().getName() + " : ");
-                        bw.write(reports.get(i).getContent());
-                        bw.newLine();
-                    }
-                    bw.close();
-
-                    createFileMessage(team.getSending_message_url());
-                    saveSubmission(thisYear,thisMonth, team);
-
-
-                } catch (IOException e) {
-                    System.out.println(e);
-                }
+            if (targetDay == 1) {
+                createFile(team, targetYear, targetMonth);
+                createFileMessage(team.getSending_message_url());
+                saveSubmission(targetYear, targetMonth, team);
             }
         }
     }
@@ -296,36 +265,67 @@ public class ReportBatch {
 
     /**
      *
-     * @param thisYear 対象の月
-     * @param thisMonth 対象の年
+     * @param year 対象の月
+     * @param month 対象の年
      * @param team 対象のチーム
      * @return
      */
-    private boolean checkSubmission(int thisYear, int thisMonth, Team team) {
+    private boolean checkSubmission(int year, int month, Team team) {
 
-        return submissionRepository.countBySubmission(team.getId(), thisYear, thisMonth) == 0;
+        return submissionRepository.countBySubmission(team.getId(), year, month) == 0;
     }
 
     /**
      *
-     * @param thisYear 対象の年
-     * @param thisMonth 対象の月
+     * @param year 対象の年
+     * @param month 対象の月
      * @param team 対象のチーム
      */
-    private void saveSubmission(int thisYear,int thisMonth, Team team) {
+    private void saveSubmission(int year,int month, Team team) {
 
         Submission submission = new Submission();
         submission.setTeam_id(team.getId());
-        submission.setYear(thisYear);
-        submission.setMonth(thisMonth);
+        submission.setYear(year);
+        submission.setMonth(month);
 
         submissionRepository.save(submission);
     }
 
-    public String getFileName(String teamName, String thisYear, String thisMonth){
+    /**
+     *
+     * @param teamName
+     * @param year
+     * @param month
+     * @return
+     */
+    public String getFileName(String teamName, String year, String month){
         return "src/main/resources/file/" + fileName.replace("{team_name}",teamName)
-                .replace("{yyyy}",thisYear)
-                .replace("{mm}",thisMonth);
+                .replace("{yyyy}",year)
+                .replace("{mm}",month);
+    }
+
+    /**
+     *
+     * @param team
+     * @param year
+     * @param month
+     * @throws IOException
+     */
+    public void createFile(Team team , int year, int month) throws IOException {
+        try{
+        File file = new File(getFileName( team.getName(),String.valueOf(year),String.valueOf(month)));
+        BufferedWriter bw = new BufferedWriter(new FileWriter(file, true));
+        List<Report> reports = reportRepository.findByTeamId(team.getId(), year, month);
+        for (int i = 0; i < reports.size(); i++) {
+            Optional<User> user = userRepository.findById(reports.get(i).getUser_id());
+            bw.write(user.get().getName() + " : ");
+            bw.write(reports.get(i).getContent());
+            bw.newLine();
+        }
+        bw.close();
+        } catch (IOException e) {
+            System.out.println(e);
+        }
     }
 
     /**

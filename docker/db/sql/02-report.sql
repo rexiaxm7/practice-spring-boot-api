@@ -6,8 +6,8 @@ create table report
     user_id integer              not null
         constraint report_user__fk
             references user,
-    year    integer default 2021 not null,
-    month   integer,
+    year    integer  not null,
+    month   integer  not null,
     content varchar
 );
 
