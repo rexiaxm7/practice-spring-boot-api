@@ -236,7 +236,6 @@ public class ReportBatch {
         int thisYear = lastDate.getYear();
         int thisMonth = lastDate.getMonthValue();
         int today = lastDate.getDayOfMonth();
-        // 前月が12月の場合、年にずれが生じるので調整する
 
         //Teamテーブルから全Teamの情報を取得する
         List<Team> teams = teamRepository.findAll();
