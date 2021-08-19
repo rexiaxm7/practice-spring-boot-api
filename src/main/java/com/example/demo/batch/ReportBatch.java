@@ -24,7 +24,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URI;
-import java.time.LocalDate;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -64,7 +64,7 @@ public class ReportBatch {
      */
     private void sendInputMessages() throws IOException {
         //日付の取得
-        LocalDate date = LocalDate.now();
+        Calendar calendar = Calendar.getInstance();
 
         //Teamテーブルから全Teamの情報を取得する
         List<Team> teams = teamRepository.findAll();
@@ -73,7 +73,7 @@ public class ReportBatch {
         for (Team team : teams) {
 
             //本日が入力開始日か確認
-            if (shouldSendInputMessage(date, team)) {
+            if (shouldSendInputMessage(calendar, team)) {
                 //入力開始日の場合、メッセージを送信する。
                 sendInputMessage(team.getSending_message_url());
             }
@@ -97,12 +97,12 @@ public class ReportBatch {
     /**
      * 今日がteamテーブルに登録されている入力開始日かどうか確認する
      *
-     * @param date
+     * @param calendar
      * @param team
      * @return 入力開始日だった場合にtrue、異なる場合にはfalse
      */
-    private boolean shouldSendInputMessage(LocalDate date , Team team) {
-        int today = date.getDayOfMonth();
+    private boolean shouldSendInputMessage(Calendar calendar, Team team) {
+        int today = calendar.get(Calendar.DATE);
         return team.getInput_start_date() == today;
     }
 
@@ -113,7 +113,7 @@ public class ReportBatch {
      */
     private void sendWarningMessages() throws IOException {
         // 日付の取得
-        LocalDate date = LocalDate.now();
+        Calendar calendar = Calendar.getInstance();
 
         // Teamテーブルから全Teamの情報を取得する
         List<Team> teams = teamRepository.findAll();
@@ -121,11 +121,11 @@ public class ReportBatch {
         // Team情報毎に繰り返し処理を行う
         for (Team team : teams) {
 
-            if (!checkSubmission(date.getYear(),date.getMonthValue(), team)) {
+            if (!checkSubmission(calendar, team)) {
                 continue;
             }
             //全員分の月報が登録されているか確認
-            if (shouldSendWarningMessage(date, team)) {
+            if (shouldSendWarningMessage(calendar, team)) {
                 //全員分の月報が未登録の場合、メッセージを通知
                 sendWarningMessage(team.getSending_message_url());
             }
@@ -149,15 +149,15 @@ public class ReportBatch {
     /**
      * 本日が通知開始日以降でチームメンバーの月報が全員分登録されていないか確認する
      *
-     * @param date
+     * @param calendar
      * @param team
      * @return 通知開始日以降でチームメンバーの月報が全員分登録されていなかった場合にtrue
      * 通知開始日前もしくはチームメンバーの月報が全員分登録されていた場合にfalse
      */
-    private boolean shouldSendWarningMessage(LocalDate date, Team team) {
-        int thisYear = date.getYear();
-        int thisMonth = date.getMonthValue();
-        int today = date.getDayOfMonth();
+    private boolean shouldSendWarningMessage(Calendar calendar, Team team) {
+        int today = calendar.get(Calendar.DATE);
+        int thisYear = calendar.get(Calendar.YEAR);
+        int thisMonth = calendar.get(Calendar.MONTH) + 1;
 
         if (today < team.getAlert_start_days()) {
             return false;
@@ -173,9 +173,9 @@ public class ReportBatch {
      * @throws IOException
      */
     private void createFiles() throws IOException {
-        LocalDate date = LocalDate.now();
-        int thisYear = date.getYear();
-        int thisMonth = date.getMonthValue();
+        Calendar calendar = Calendar.getInstance();
+        int thisYear = calendar.get(Calendar.YEAR);
+        int thisMonth = calendar.get(Calendar.MONTH) + 1;
         // Teamテーブルから全Teamの情報を取得する
         List<Team> teams = teamRepository.findAll();
 
@@ -183,12 +183,13 @@ public class ReportBatch {
         for (Team team : teams) {
 
             // 既にファイル化されていた場合、continue
-            if (!checkSubmission(thisYear, thisMonth, team)) {
+            if (!checkSubmission(calendar, team)) {
                 continue;
             }
 
             if (userRepository.checkSubmission(thisYear, thisMonth, team.getId()).size() == 0) {
                 try {
+
                     File file = new File(getFileName( team.getName(),String.valueOf(thisYear),String.valueOf(thisMonth)));
                     BufferedWriter bw = new BufferedWriter(new FileWriter(file, true));
                     List<Report> reports = reportRepository.findByTeamId(team.getId(), thisYear, thisMonth);
@@ -201,7 +202,7 @@ public class ReportBatch {
                     bw.close();
 
                     createFileMessage(team.getSending_message_url());
-                    saveSubmission(thisYear,thisMonth, team);
+                    saveSubmission(calendar, team);
 
 
                 } catch (IOException e) {
@@ -231,21 +232,25 @@ public class ReportBatch {
      * @throws IOException
      */
     private void createFilesTemporarily() throws IOException {
+        Calendar calendar = Calendar.getInstance();
+        int thisYear = calendar.get(Calendar.YEAR);
         // 前月を取得
-        LocalDate lastDate = LocalDate.now().minusMonths(1);
-        int thisYear = lastDate.getYear();
-        int thisMonth = lastDate.getMonthValue();
-        int today = lastDate.getDayOfMonth();
-        // 前月が12月の場合、年にずれが生じるので調整する
+        int thisMonth = calendar.get(Calendar.MONTH);
+        int today = calendar.get(Calendar.DATE);
 
+        // 前月が12月の場合、年にずれが生じるので調整する
+        if (thisMonth == 12) {
+            thisYear = thisYear - 1;
+        }
         //Teamテーブルから全Teamの情報を取得する
         List<Team> teams = teamRepository.findAll();
+
 
         //Team情報毎に繰り返し処理を行う
         for (Team team : teams) {
 
             // 既にファイル化されていた場合、continue
-            if (!checkSubmission(thisYear, thisMonth, team)) {
+            if (!checkSubmission(calendar, team)) {
                 continue;
             }
 
@@ -264,7 +269,7 @@ public class ReportBatch {
                     bw.close();
 
                     createFileMessage(team.getSending_message_url());
-                    saveSubmission(thisYear,thisMonth, team);
+                    saveSubmission(calendar, team);
 
 
                 } catch (IOException e) {
@@ -294,26 +299,28 @@ public class ReportBatch {
         new RestTemplate().exchange(req, String.class);
     }
 
-
     /**
+     * 対象チームの当年、月のレポートがファイル化されているか確認する
      *
-     * @param thisYear 対象の月
-     * @param thisMonth 対象の年
-     * @param team 対象のチーム
-     * @return
+     * @param calendar
+     * @param team     - 対象チーム
+     * @return 登録されていなかった場合はtrue、されていた場合はfalseを返す
      */
-    private boolean checkSubmission(int thisYear, int thisMonth, Team team) {
-
+    private boolean checkSubmission(Calendar calendar, Team team) {
+        int thisYear = calendar.get(Calendar.YEAR);
+        int thisMonth = calendar.get(Calendar.MONTH) + 1;
         return submissionRepository.countBySubmission(team.getId(), thisYear, thisMonth) == 0;
     }
 
     /**
+     * submissionテーブルにファイルが作成されたことを登録する
      *
-     * @param thisYear 対象の年
-     * @param thisMonth 対象の月
-     * @param team 対象のチーム
+     * @param calendar
+     * @param team
      */
-    private void saveSubmission(int thisYear,int thisMonth, Team team) {
+    private void saveSubmission(Calendar calendar, Team team) {
+        int thisYear = calendar.get(Calendar.YEAR);
+        int thisMonth = calendar.get(Calendar.MONTH) + 1;
 
         Submission submission = new Submission();
         submission.setTeam_id(team.getId());
