@@ -1,4 +1,4 @@
-create table "user"
+create table user
 (
     id serial not null
         constraint user_pk
@@ -7,6 +7,7 @@ create table "user"
     team_id integer not null
         constraint user_team__fk
             references team
+
 );
 
-alter table "user" owner to test;
+alter table user owner to test;
