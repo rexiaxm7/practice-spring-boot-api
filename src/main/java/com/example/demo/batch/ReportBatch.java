@@ -5,7 +5,9 @@ import com.example.demo.service.MessageSendingService;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
+import java.io.*;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 @Component
 public class ReportBatch {
@@ -18,13 +20,12 @@ public class ReportBatch {
         this.fileCreationService = fileCreationService;
     }
 
+
     @Scheduled(cron = "${batch.cron}", zone = "${batch.timezone}")
-    public void batchMain() throws IOException {
+    public void batchMain() throws Exception {
         messageSendingService.sendInputMessages();
         messageSendingService.sendWarningMessages();
         fileCreationService.createFiles();
         fileCreationService.createFilesTemporarily();
     }
-
-
 }

@@ -8,10 +8,9 @@ import com.example.demo.repository.TeamRepository;
 import com.example.demo.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -24,16 +23,21 @@ public class FileCreationService {
     private final ReportRepository reportRepository;
     private final SubmissionService submissionService;
     private final MessageSendingService messageSendingService;
+    private final SendGridService sendGridService;
+    private  final ZipFileCreationService zipFileService;
+    private  final String LINE_SEPARATOR = System.getProperty("line.separator");
 
     @Value("${file.name}")
     private String fileName;
 
-    public FileCreationService(TeamRepository teamRepository, UserRepository userRepository, ReportRepository reportRepository, SubmissionService submissionService, MessageSendingService messageSendingService) {
+    public FileCreationService(TeamRepository teamRepository, UserRepository userRepository, ReportRepository reportRepository, SubmissionService submissionService, MessageSendingService messageSendingService, SendGridService sendGridService, ZipFileCreationService zipFileService) {
         this.teamRepository = teamRepository;
         this.userRepository = userRepository;
         this.reportRepository = reportRepository;
         this.submissionService = submissionService;
         this.messageSendingService = messageSendingService;
+        this.sendGridService = sendGridService;
+        this.zipFileService = zipFileService;
     }
 
 
@@ -60,8 +64,7 @@ public class FileCreationService {
             if (userRepository.checkSubmission(thisYear, thisMonth, team.getId()).size() == 0) {
                 createFile(team, thisYear, thisMonth);
                 messageSendingService.createFileMessage(team.getSending_message_url());
-                submissionService.saveSubmission(thisYear, thisMonth, team);
-
+                //submissionService.saveSubmission(thisYear, thisMonth, team);
             }
         }
     }
@@ -73,7 +76,7 @@ public class FileCreationService {
      */
     public void createFilesTemporarily() throws IOException {
         // 前月を取得
-        LocalDate targetDate = LocalDate.now().minusMonths(1);
+        LocalDate targetDate = LocalDate.of(2021,8,1).minusMonths(1);
         int targetYear = targetDate.getYear();
         int targetMonth = targetDate.getMonthValue();
         int targetDay = targetDate.getDayOfMonth();
@@ -93,7 +96,7 @@ public class FileCreationService {
             if (targetDay == 1) {
                 createFile(team, targetYear, targetMonth);
                 messageSendingService.createFileMessage(team.getSending_message_url());
-                submissionService.saveSubmission(targetYear, targetMonth, team);
+                //submissionService.saveSubmission(targetYear, targetMonth, team);
             }
         }
     }
@@ -106,7 +109,7 @@ public class FileCreationService {
      * @return
      */
     private String getFileName(String teamName, String year, String month) {
-        return "src/main/resources/file/" + fileName.replace("{team_name}", teamName)
+        return  fileName.replace("{team_name}", teamName)
                 .replace("{yyyy}", year)
                 .replace("{mm}", month);
     }
@@ -119,16 +122,18 @@ public class FileCreationService {
      */
     private void createFile(Team team, int year, int month) throws IOException {
         try {
-            File file = new File(getFileName(team.getName(), String.valueOf(year), String.valueOf(month)));
-            BufferedWriter bw = new BufferedWriter(new FileWriter(file, true));
+
             List<Report> reports = reportRepository.findByTeamId(team.getId(), year, month);
+            String str = "";
             for (int i = 0; i < reports.size(); i++) {
                 Optional<User> user = userRepository.findById(reports.get(i).getUser_id());
-                bw.write(user.get().getName() + " : ");
-                bw.write(reports.get(i).getContent());
-                bw.newLine();
+                str += user.get().getName() + " : " + reports.get(i).getContent() + LINE_SEPARATOR;
             }
-            bw.close();
+
+            byte[] fileBytes = str.getBytes(StandardCharsets.UTF_8);
+            String fileName=getFileName(team.getName(),String.valueOf(year),String.valueOf(month));
+            zipFileService.createZipFile(fileName,fileBytes);
+
         } catch (IOException e) {
             System.out.println(e);
         }
