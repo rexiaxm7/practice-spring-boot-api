@@ -5,7 +5,7 @@ create table report
             primary key,
     user_id integer              not null
         constraint report_user__fk
-            references user,
+            references "user",
     year    integer  not null,
     month   integer  not null,
     content varchar
