@@ -1,5 +1,12 @@
 version: "3"
 services:
+  openapi-generator-server:
+    image: openapitools/openapi-generator-cli
+    volumes:
+      - ./:/local
+    command: generate -g typescript-axios -i local/swagger.yml -o local/frontend --additional-properties supportsES6=true,withInterfaces=true,sortParamsByRequiredFlag=true
+    ports:
+        - "10080:10080"
   db:
     image: postgres:10
     environment:
