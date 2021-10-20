@@ -5,7 +5,6 @@ import org.springframework.stereotype.Component;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
 
 @Data
 @Entity
@@ -22,8 +21,8 @@ public class User {
     @NotBlank(message = "{NotBlank.User.name}")
     private String name;
 
-    @Column(name= "team_id")
-    @NotNull(message = "{NotNull.User.team_id}")
-    private int team_id;
+    @ManyToOne
+    @JoinColumn(name="team_id")
+    private Team team;
 
 }
