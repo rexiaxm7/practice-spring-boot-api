@@ -1,0 +1,173 @@
+#!/bin/bash
+function templates {
+cat <<EOF
+feat:     \U2728    新機能追加
+fix:      \U1f41e   バグ修正
+doc:      \U1f4da   ドキュメントのみの変更
+style:    \U1f484   プログラムの動きに影響を与えない変更\n(インデントの調整やフォーマッタにかけた場合など)
+refactor: \U1f528   バグ修正や新機能追加以外のコード修正
+perf:     \U1f680   パフォーマンス改善のためのコード修正
+test:     \U1f6a8   テストの追加や既存テストの修正
+chore:    \U1f477   ビルドプロセスやドキュメント生成のような補助ツールやライブラリの変更
+merge:    \U1f500
+EOF
+# "merge:" is a special prefix to create merge commit message.
+}
+
+readonly overview_title="概要 (下記テンプレートを1つ選択してコメントを外してください)"
+readonly  details_title="詳細"
+
+
+readonly COMMIT_MSG_FILE=$1 COMMIT_SOURCE=$2 SHA1=$3
+
+function main {
+    case "${COMMIT_SOURCE}" in
+        message) # use -m/-F
+            local commit_message="$(cat "${COMMIT_MSG_FILE}")"
+            local prefix="$(extract_prefix "${commit_message}")"
+            add_emoji "${prefix}" "${commit_message}" > "${COMMIT_MSG_FILE}"
+            ;;
+        template) # use template (ex: -t option)
+            : # do nothing
+            ;;
+        merge) # merge commit
+            local commit_message="$(cat "${COMMIT_MSG_FILE}")"
+            add_emoji "merge:" "${commit_message}" > "${COMMIT_MSG_FILE}"
+            ;;
+        squash) # squash commits in a branch with --squash
+            : # do nothing
+            ;;
+        commit) # use -c/-C/--amend
+            local commit_message="$(cat "${COMMIT_MSG_FILE}")"
+            if is_interactive "${commit_message}"
+            then
+                apply_template "${commit_message}" > "${COMMIT_MSG_FILE}"
+            fi
+            ;;
+        *) # no option
+            local commit_message="$(cat "${COMMIT_MSG_FILE}")"
+            create_full_template "${commit_message}" > "${COMMIT_MSG_FILE}"
+            ;;
+    esac
+}
+
+function create_full_template {
+    local commit_message="$1"
+
+    echo "# ${overview_title}"
+    print_templates
+    echo ""
+    echo "# ${details_title}"
+    echo ""
+    echo "${commit_message}"
+}
+
+function apply_template {
+    local commit_message="$1"
+
+    local prefix="$(extract_prefix_without_emoji "${commit_message}")"
+    local template=$(select_template "${prefix}")
+    if [[ -z "${template}" ]]
+    then
+        # invalid prefix
+        extract_title "${commit_message}"
+        print_templates
+    else
+        # valid prefix
+        local title="$(extract_title_without_prefix "${commit_message}")"
+        print_templates "${prefix}" "${title}"
+    fi
+    echo
+    echo "# ${details_title}"
+    echo
+    extract_details "${commit_message}"
+}
+
+function print_templates {
+    local apply_prefix="$1" apply_title="$2"
+
+    templates | grep -v '^merge:' | sed -e 's/\\/\\\\/g' \
+        | while read prefix emoji description
+        do
+            local desc_comment="$(
+                echo -e "${description}" | awk '
+                    NR == 1 {
+                        print "#  └ " $0
+                    }
+                    NR != 1 {
+                        print "#    " $0
+                    }
+                '
+            )"
+            if [[ "${apply_prefix}" = "${prefix}" ]]
+            then
+                echo '#=================================================='
+                echo "$(emoji_char "${emoji}")${prefix}${apply_title}"
+                echo "${desc_comment}"
+                echo '#=================================================='
+            else
+                echo "#$(emoji_char "${emoji}")${prefix} "
+                echo "${desc_comment}"
+            fi
+
+        done
+}
+
+function add_emoji {
+    local prefix="$1" commit_message="$2"
+
+    local template=$(select_template "${prefix}")
+    local emoji=$(emoji_of "${template}")
+
+    echo "${emoji}${commit_message}"
+}
+
+function select_template {
+    templates | awk -v prefix="$1" '$1 == prefix'
+}
+
+function decode_emoji {
+    perl -CO -pE 's/\\u(\p{Hex}+)/chr(hex($1))/xieg'
+}
+
+function emoji_char {
+    echo "$1" | decode_emoji
+}
+
+function emoji_of {
+    local template="$1"
+    echo "${template}" | awk '{ print $2 }' | decode_emoji
+}
+
+function is_interactive {
+    local commit_message="$1"
+    # If it is interactive mode, it may contain comment lines ('^#')
+    echo "${commit_message}" | grep -E '^#' &> /dev/null
+}
+
+function extract_prefix {
+    local commit_message="$1"
+    extract_title "${commit_message}" | awk '{ print $1 }'
+}
+
+function extract_prefix_without_emoji {
+    local commit_message="$1"
+    extract_prefix "${commit_message}" | sed -E 's/[^a-zA-Z0-9:]//g'
+}
+
+function extract_title {
+    local commit_message="$1"
+    echo "${commit_message}" | head -n 1
+}
+
+function extract_title_without_prefix {
+    local commit_message="$1"
+    extract_title "${commit_message}" | awk '{ $1 = ""; print }'
+}
+
+function extract_details {
+    local commit_message="$1"
+    echo "${commit_message}" | tail -n +3
+}
+
+main
