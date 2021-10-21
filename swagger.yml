@@ -1,0 +1,297 @@
+openapi: 3.0.0
+info:
+  title: swagger
+  version: '1.0'
+servers:
+  - url: 'http://localhost:8080'
+paths:
+  '/users/{userId}':
+    parameters:
+      - schema:
+          type: integer
+        name: userId
+        in: path
+        required: true
+        description: Id of an existing user.
+    get:
+      summary: Get User Info by User ID
+      tags: []
+      responses:
+        '200':
+          $ref: '#/components/responses/findUser'
+        '404':
+          description: User Not Found
+      operationId: get-users-userId
+      description: Retrieve the information of the user with the matching user ID.
+    patch:
+      summary: Update User Information
+      operationId: patch-users-userId
+      responses:
+        '200':
+          description: User Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+              examples:
+                Updated User Rebecca Baker:
+                  value:
+                    id: 13
+                    firstName: Rebecca
+                    lastName: Baker
+                    email: rebecca@gmail.com
+                    dateOfBirth: '1985-10-02'
+                    emailVerified: false
+                    createDate: '2019-08-24'
+        '404':
+          description: User Not Found
+        '409':
+          description: Email Already Taken
+      description: Update the information of an existing user.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                email:
+                  type: string
+                  description: 'If a new email is given, the user''s email verified property will be set to false.'
+                dateOfBirth:
+                  type: string
+            examples:
+              Update First Name:
+                value:
+                  firstName: Rebecca
+              Update Email:
+                value:
+                  email: rebecca@gmail.com
+              Update Last Name & Date of Birth:
+                value:
+                  lastName: Baker
+                  dateOfBirth: '1985-10-02'
+        description: Patch user properties to update.
+    delete:
+      summary: ''
+      operationId: delete-users-userId
+      responses:
+        '200':
+          description: OK
+  /user:
+    post:
+      summary: Create New User
+      operationId: post-user
+      responses:
+        '200':
+          $ref: '#/components/responses/findAllUser'
+        '400':
+          description: Missing Required Information
+        '409':
+          description: Email Already Taken
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                email:
+                  type: string
+                dateOfBirth:
+                  type: string
+                  format: date
+              required:
+                - firstName
+                - lastName
+                - email
+                - dateOfBirth
+            examples:
+              Create User Bob Fellow:
+                value:
+                  firstName: Bob
+                  lastName: Fellow
+                  email: bob.fellow@gmail.com
+                  dateOfBirth: '1996-08-24'
+        description: Post the necessary fields for the API to create a new user.
+      description: Create a new user.
+components:
+  schemas:
+    Team:
+      title: Team
+      type: object
+      description: ''
+      x-examples:
+        example-1:
+          id: 1
+          name: チーム1
+          input_start_date: 0
+          alert_start_days: 0
+          sending_message_url: 'http://example.com'
+      properties:
+        id:
+          type: number
+          description: Unique identifier for the given user.
+        name:
+          type: string
+          description: チーム名
+        input_start_date:
+          type: number
+          description: ''
+        alert_start_days:
+          type: number
+          format: email
+        sending_message_url:
+          type: string
+          format: uri
+          description: 送信メッセージURL
+      required:
+        - id
+        - name
+        - input_start_date
+        - alert_start_days
+    User:
+      title: User
+      type: object
+      properties:
+        id:
+          type: number
+          description: ユーザーID
+        name:
+          type: string
+          description: 名前
+        team_id:
+          type: number
+          description: チームID
+      required:
+        - id
+        - name
+        - team_id
+      x-examples:
+        example-1:
+          id: 1
+          name: 苗字 名前
+          team_id: 1
+    Report:
+      title: Report
+      type: object
+      x-examples:
+        example-1:
+          id: 1
+          user_id: 1
+          year: 2
+          month: 28
+          content: 月報の内容をここに入力
+      properties:
+        id:
+          type: number
+          description: 月報ID
+        user_id:
+          type: number
+          description: ユーザーID
+        year:
+          type: number
+          minimum: 1
+          maximum: 12
+          exclusiveMinimum: true
+          exclusiveMaximum: true
+          description: 年
+        month:
+          type: number
+          minimum: 1
+          maximum: 31
+          exclusiveMinimum: true
+          exclusiveMaximum: true
+          description: 月
+        content:
+          type: string
+          description: 月報
+      required:
+        - id
+        - user_id
+        - year
+        - month
+        - content
+    Submission:
+      title: Submission
+      type: object
+      properties:
+        id:
+          type: number
+          description: 提出ID
+        teamId:
+          type: number
+          description: チームID
+        year:
+          type: number
+          description: 年
+          minimum: 1
+          maximum: 12
+          exclusiveMinimum: true
+          exclusiveMaximum: true
+        month:
+          type: number
+          description: 月
+          minimum: 1
+          maximum: 31
+          exclusiveMinimum: true
+          exclusiveMaximum: true
+      required:
+        - id
+        - teamId
+        - year
+        - month
+      x-examples:
+        example:
+          id: 1
+          teamId: 1
+          year: 1
+          month: 31
+  responses:
+    findAllUser:
+      description: Example response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+      headers: {}
+    findUser:
+      description: Example response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: '#/components/schemas/User'
+    findTeam:
+      description: Example response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: '#/components/schemas/Team'
+    findAllTeam:
+      description: Example response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Team'
