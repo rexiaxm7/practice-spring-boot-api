@@ -27,11 +27,6 @@ public class UserController {
         return userService.findOne(id);
     }
 
-    @RequestMapping(method = RequestMethod.POST)
-    public User userCreate(@RequestBody User user) {
-        return userService.create(user);
-    }
-
     @RequestMapping(value = "/{id}", method = RequestMethod.PUT)
     public User userUpdate(@PathVariable("id") int id,@RequestBody User user) {
         user.setId(id);
