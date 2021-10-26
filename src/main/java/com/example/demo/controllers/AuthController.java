@@ -17,7 +17,6 @@ public class AuthController {
 
     @PostMapping("/signup")
     public User signupPost(@RequestBody User user) {
-        System.out.println(user);
         return userService.create(user);
 
     }

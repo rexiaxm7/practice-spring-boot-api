@@ -16,9 +16,8 @@ public class SimpleLoginUser extends org.springframework.security.core.userdetai
     }
 
     public SimpleLoginUser(User user) {
-        super(user.getName(), user.getPassword(), determineRoles(user.getAdmin()));
+        super(user.getName(), user.getPassword(),  determineRoles(user.getAdmin()));
         this.user = user;
-        System.out.println(user);
     }
 
     private static final List<GrantedAuthority> USER_ROLES = AuthorityUtils.createAuthorityList("ROLE_USER");

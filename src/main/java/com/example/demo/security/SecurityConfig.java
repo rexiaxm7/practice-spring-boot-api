@@ -4,8 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
+
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -18,64 +17,38 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
-import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
-import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-
 import java.util.Arrays;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+
+import static com.example.demo.security.SecurityConstants.LOGIN_URL;
+import static com.example.demo.security.SecurityConstants.SIGNUP_URL;
+
 @EnableWebSecurity
 @Configuration
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
-
-
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        http     // CSRF
-                .csrf()
-                .disable()
+        http
                 .cors()
-                .and()
-                // AUTHORIZE
-                .authorizeRequests()
-                .mvcMatchers("/login","/signup")
-                .permitAll()
-//                .mvcMatchers("/user/**")
-//                .hasRole("USER")
-//                .mvcMatchers("/admin/**")
-//                .hasRole("ADMIN")
-                .anyRequest()
-                .authenticated()
-                .and()
-                // EXCEPTION
-                .exceptionHandling()
-                .authenticationEntryPoint(authenticationEntryPoint())
-                .accessDeniedHandler(accessDeniedHandler())
-                .and()
-                // LOGIN
-                .formLogin()
-                .loginProcessingUrl("/login").permitAll()
-                .usernameParameter("email")
-                .passwordParameter("password")
-                .successHandler(authenticationSuccessHandler())
-                .failureHandler(authenticationFailureHandler())
-                .and()
-                // LOGOUT
-                .logout()
-                .logoutUrl("/logout")
-                .invalidateHttpSession(true)
-                .deleteCookies("JSESSIONID")
-                .logoutSuccessHandler(logoutSuccessHandler())
-                //.addLogoutHandler(new CookieClearingLogoutHandler())
-                .and()
+                .and().authorizeRequests()
+                .antMatchers("/public", SIGNUP_URL, LOGIN_URL).permitAll()
+                .anyRequest().authenticated()
+                .and().logout()
+                .and().csrf().disable()
+                .addFilter(new JWTAuthenticationFilter(authenticationManager(), bCryptPasswordEncoder()))
+                .addFilter(new JWTAuthorizationFilter(authenticationManager()))
+                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+    }
 
-                //.ignoringAntMatchers("/login")
-//                .csrfTokenRepository(new CookieCsrfTokenRepository())
-        ;
+    @Bean
+    public BCryptPasswordEncoder bCryptPasswordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 
 
@@ -112,23 +85,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         source.registerCorsConfiguration("/**", configuration);
 
         return source;
-    }
-
-
-    AuthenticationEntryPoint authenticationEntryPoint() {
-        return new SimpleAuthenticationEntryPoint();
-    }
-
-    AccessDeniedHandler accessDeniedHandler() {
-        return new SimpleAccessDeniedHandler();
-    }
-
-    AuthenticationSuccessHandler authenticationSuccessHandler() {
-        return new SimpleAuthenticationSuccessHandler();
-    }
-
-    AuthenticationFailureHandler authenticationFailureHandler() {
-        return new SimpleAuthenticationFailureHandler();
     }
 
     LogoutSuccessHandler logoutSuccessHandler() {
