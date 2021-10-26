@@ -77,6 +77,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 "Access-Control-Allow-Origin",
                 "Access-Control-Request-Method",
                 "Access-Control-Request-Headers",
+                "Authorization",
                 "Cache-Control",
                 "Content-Type",
                 "Accept-Language"));
