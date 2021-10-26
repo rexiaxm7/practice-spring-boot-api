@@ -76,7 +76,6 @@ public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilte
                                             FilterChain chain,
                                             Authentication auth) throws IOException, ServletException {
         SimpleLoginUser user = (SimpleLoginUser)auth.getPrincipal();
-        System.out.println("ぼぼぼぼぼｂ");
         System.out.println(user);
         // loginIdからtokenを設定してヘッダにセットする
         SecretKey key = Keys.secretKeyFor(SignatureAlgorithm.HS512);
