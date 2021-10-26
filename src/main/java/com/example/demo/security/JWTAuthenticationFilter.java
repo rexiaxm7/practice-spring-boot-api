@@ -19,6 +19,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -75,14 +76,15 @@ public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilte
                                             HttpServletResponse res,
                                             FilterChain chain,
                                             Authentication auth) throws IOException, ServletException {
+        byte[] secretKeyBytes = SECRET.getBytes();
+
         SimpleLoginUser user = (SimpleLoginUser)auth.getPrincipal();
         System.out.println(user);
         // loginIdからtokenを設定してヘッダにセットする
-        SecretKey key = Keys.secretKeyFor(SignatureAlgorithm.HS512);
         String token = Jwts.builder()
                 .setSubject(user.getUsername()) // usernameだけを設定する
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
-                .signWith(key)
+                .signWith(new SecretKeySpec(secretKeyBytes, "HmacSHA512"))
                 .compact();
 
 
