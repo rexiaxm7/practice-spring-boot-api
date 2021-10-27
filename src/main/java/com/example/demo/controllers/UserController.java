@@ -1,9 +1,13 @@
 package com.example.demo.controllers;
 
 import com.example.demo.bean.User;
+import com.example.demo.security.SimpleLoginUser;
 import com.example.demo.service.UserService;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,14 +31,14 @@ public class UserController {
         return userService.findOne(id);
     }
 
-    @RequestMapping(method = RequestMethod.POST)
-    public User userCreate(@RequestBody User user) {
-        return userService.create(user);
-    }
-
     @RequestMapping(value = "/{id}", method = RequestMethod.PUT)
     public User userUpdate(@PathVariable("id") int id,@RequestBody User user) {
-        user.setId(id);
+        //TODO:認証情報からパスワードを取得したい
+        Optional<User> myUser = userService.findOne(id);
+        myUser.ifPresent( me -> {
+            user.setPassword(me.getPassword());
+            user.setId(id);
+        });
         return userService.update(user);
     }
 
