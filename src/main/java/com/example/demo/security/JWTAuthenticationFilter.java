@@ -92,6 +92,7 @@ public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         ObjectMapper mapper = new ObjectMapper();
         String userString = mapper.writeValueAsString(user);
 
+        res.setContentType("Application/json; charset=UTF-8");
         res.getWriter().write(new ObjectMapper().writeValueAsString(userString));
         res.setStatus(HttpStatus.OK.value()); //200 OK.
         res.addHeader(HEADER_STRING, TOKEN_PREFIX + token);
