@@ -1,13 +1,14 @@
 package com.example.demo.bean;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import org.springframework.stereotype.Component;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+
+import static com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY;
 
 @Data
 @Entity
@@ -32,7 +33,7 @@ public class User {
     @NotBlank(message = "{NotBlank.User.email}")
     private String email;
 
-    @JsonIgnore
+    @JsonProperty(access = WRITE_ONLY)
     @Column(name="password")
     @NotBlank(message = "{NotBlank.User.password}")
     private String password;

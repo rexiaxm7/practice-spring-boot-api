@@ -3,10 +3,9 @@ package com.example.demo.service;
 import com.example.demo.bean.User;
 import com.example.demo.repository.UserRepository;
 import lombok.val;
+import net.bytebuddy.utility.RandomString;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -23,7 +22,6 @@ public class UserService {
     @Autowired
     PasswordEncoder passwordEncoder;
 
-
     public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
@@ -37,8 +35,8 @@ public class UserService {
     }
 
     public User create(User user) {
-        val password = user.getPassword();
-        val hashedPassword =passwordEncoder.encode(password);
+        System.out.println(user);
+        val hashedPassword =passwordEncoder.encode(user.getPassword());
         user.setPassword(hashedPassword);
         return userRepository.save(user);
     }
